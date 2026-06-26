@@ -1,20 +1,65 @@
+import os
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Security
+from fastapi.security import APIKeyHeader
+from fastapi.openapi.utils import get_openapi
 from pydantic import BaseModel
 from openai import OpenAI
+from mangum import Mangum
 
-from app.rag.embeddings import get_embedding
-from app.rag.vectorstore import search, load_store
+from rag.embeddings import get_embedding
+from rag.vectorstore import search, load_store
 
-app = FastAPI()
+# -------------------------
+# API Key Auth
+# -------------------------
+API_KEY = os.getenv("MY_API_KEY")
+API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+def verify_api_key(api_key: str = Security(API_KEY_HEADER)):
+    if api_key != API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid or missing API key")
+    return api_key
+
+# -------------------------
+# App setup
+# -------------------------
+app = FastAPI(
+    title="Fyno RAG",
+    swagger_ui_parameters={"persistAuthorization": True}
+)
 client = OpenAI()
+
+# -------------------------
+# Swagger auth button
+# -------------------------
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Fyno RAG",
+        version="1.0.0",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "APIKeyHeader": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-API-Key"
+        }
+    }
+    openapi_schema["security"] = [{"APIKeyHeader": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 print("🔥 App loaded")
 
 # -------------------------
-# Load vector DB ONLY
+# Load vector DB
 # -------------------------
 @app.on_event("startup")
 def startup_event():
@@ -29,16 +74,17 @@ class Question(BaseModel):
     question: str
 
 # -------------------------
-# Health check
+# Health check (public)
 # -------------------------
 @app.get("/")
 def root():
     return {"message": "fyno_rag is running"}
+
 # -------------------------
-# Ask endpoint
+# Ask endpoint (protected)
 # -------------------------
 @app.post("/ask")
-def ask_question(payload: Question):
+def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
     question = payload.question
 
     query_embedding = get_embedding(question)
@@ -75,5 +121,4 @@ Question: {question}
         "sources": [c["metadata"]["url"] for c in results]
     }
 
-from mangum import Mangum
 handler = Mangum(app)
