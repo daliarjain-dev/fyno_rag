@@ -61,3 +61,6 @@ def search(query_embedding, k=5):
             results.append(documents[i])
 
     return results
+
+def store_size():
+    return index.ntotal

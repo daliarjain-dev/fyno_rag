@@ -1,5 +1,6 @@
 fastapi
-uvicorn[standard]
+mangum
+uvicorn
 openai
 faiss-cpu
 tiktoken
