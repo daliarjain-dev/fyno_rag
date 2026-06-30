@@ -3,8 +3,9 @@ import numpy as np
 import os
 import pickle
 
-INDEX_PATH = "data/faiss.index"
-DOCS_PATH = "data/documents.pkl"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+INDEX_PATH = os.path.join(BASE_DIR, "data", "faiss.index")
+DOCS_PATH = os.path.join(BASE_DIR, "data", "documents.pkl")
 
 index = faiss.IndexFlatL2(1536)
 documents = []
