@@ -9,11 +9,8 @@ __pycache__/
 venv/
 
 # data / embeddings
-data/
 pages/
 vectorstore/
-*.faiss
-*.pkl
 
 # system
 .DS_Store
