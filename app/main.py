@@ -2,9 +2,10 @@ import os
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from fastapi import FastAPI, HTTPException, Security
+from fastapi import FastAPI, HTTPException, Security, Request
 from fastapi.security import APIKeyHeader
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from openai import OpenAI
 from mangum import Mangum
@@ -79,6 +80,16 @@ class Question(BaseModel):
 @app.get("/")
 def root():
     return {"message": "fyno_rag is running"}
+
+# -------------------------
+# Fyno webhook verification (public)
+# -------------------------
+@app.get("/ask")
+async def verify_fyno(request: Request):
+    token = request.query_params.get("fyno_token")
+    if token:
+        return PlainTextResponse(token, status_code=200)
+    return PlainTextResponse("no token", status_code=400)
 
 # -------------------------
 # Ask endpoint (protected)

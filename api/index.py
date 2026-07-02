@@ -7,9 +7,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from fastapi import FastAPI, HTTPException, Security
+from fastapi import FastAPI, HTTPException, Security, Request
 from fastapi.security import APIKeyHeader
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from openai import OpenAI
 from mangum import Mangum
@@ -30,6 +31,7 @@ def verify_api_key(api_key: str = Security(API_KEY_HEADER)):
     if not api_key or api_key != API_KEY:
         raise HTTPException(status_code=403, detail="Invalid or missing API key")
     return api_key
+
 # -------------------------
 # App setup
 # -------------------------
@@ -84,6 +86,16 @@ class Question(BaseModel):
 @app.get("/")
 def root():
     return {"message": "fyno_rag is running"}
+
+# -------------------------
+# Fyno webhook verification (public)
+# -------------------------
+@app.get("/ask")
+async def verify_fyno(request: Request):
+    token = request.query_params.get("fyno_token")
+    if token:
+        return PlainTextResponse(token, status_code=200)
+    return PlainTextResponse("no token", status_code=400)
 
 # -------------------------
 # Ask endpoint (protected)
