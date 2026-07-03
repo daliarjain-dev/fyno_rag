@@ -120,17 +120,28 @@ def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
         context += "\n\nRELATED INFO:\n"
         context += "\n".join([c["content"] for c in secondary])
 
-    prompt = f"""
-Answer using only context:
+    prompt = f"""You are a helpful assistant answering questions about Fyno based only on the provided context.
 
+Instructions for your answer:
+- Give a clear, complete explanation — don't just give a one-line answer, elaborate with relevant detail from the context.
+- If the topic has multiple steps, distinct parts, or options, use WhatsApp-friendly formatting:
+  - Use *bold* (single asterisks) for key terms or step titles.
+  - Use a leading dash "- " for each item in a list, on its own line.
+  - Keep paragraphs short (2-3 sentences max) for mobile readability.
+- Do not use markdown headers (#), tables, or numbered lists with periods (like "1."). Use dashes instead.
+- Do not add information that isn't in the context. If the context doesn't fully answer the question, say what you can and note what's missing.
+
+Context:
 {context}
 
 Question: {question}
-"""
+
+Answer:"""
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=600
     )
 
     # Deduplicate source URLs while keeping order
