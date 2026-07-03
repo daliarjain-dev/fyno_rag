@@ -108,7 +108,7 @@ def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
     results = search(query_embedding, k=6)
 
     if not results:
-        return {"answer": "No relevant information found."}
+        return {"answer": "No relevant information found.", "sources": "", "source_list": []}
 
     primary = results[:3]
     secondary = results[3:]
@@ -133,10 +133,21 @@ Question: {question}
         messages=[{"role": "user", "content": prompt}]
     )
 
+    # Deduplicate source URLs while keeping order
+    seen = set()
+    unique_urls = []
+    for c in results:
+        url = c["metadata"]["url"]
+        if url not in seen:
+            seen.add(url)
+            unique_urls.append(url)
+
+    sources_text = "\n".join(unique_urls)
+
     return {
         "answer": response.choices[0].message.content,
-        "sources": [c["metadata"]["url"] for c in results]
+        "sources": sources_text,        # clean plain-text URLs, one per line
+        "source_list": unique_urls      # keep the raw list too, in case you need it elsewhere
     }
-
 # Mangum wraps app for Vercel — keep app as FastAPI for local uvicorn
 handler = Mangum(app)

@@ -1,10 +1,6 @@
 import os
 from pathlib import Path
-
-
-def read_mdx_file(path):
-    with open(path, "r", encoding="utf-8", errors="ignore") as f:
-        return f.read()
+import frontmatter
 
 
 def get_project_root():
@@ -15,6 +11,14 @@ def get_project_root():
             return parent
 
     return current.parents[3]  # fallback (rare case)
+
+
+def build_url(slug, path):
+    if slug:
+        return f"https://fyno.io/docs/{slug}"
+    # Fallback: derive a slug from the filename if no frontmatter slug exists
+    fallback_slug = path.stem  # filename without extension
+    return f"https://fyno.io/docs/{fallback_slug}"
 
 
 def load_fyno_docs_local():
@@ -39,11 +43,16 @@ def load_fyno_docs_local():
                 if file.lower().endswith((".mdx", ".md")):
                     path = Path(root) / file
 
-                    text = read_mdx_file(path)
+                    with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                        post = frontmatter.load(f)
+
+                    slug = post.get("slug")
+                    url = build_url(slug, path)
+                    content = post.content  # frontmatter stripped, just the actual doc text
 
                     docs.append({
-                        "url": str(path),
-                        "markdown": text
+                        "url": url,
+                        "markdown": content
                     })
 
     return docs
