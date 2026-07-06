@@ -10,7 +10,7 @@ nltk.download("punkt", quiet=True)
  
 encoder = tiktoken.get_encoding("cl100k_base")
  
-MAX_TOKENS = 400
+MAX_TOKENS = 800
 MIN_TOKENS = 80
 OVERLAP_SENTENCES = 2
  
