@@ -102,6 +102,7 @@ async def verify_fyno(request: Request):
 # -------------------------
 @app.post("/ask")
 def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
+    print("🚨🚨🚨 DEBUG MARKER - THIS IS THE LATEST CODE 🚨🚨🚨")
     question = payload.question
 
     query_embedding = get_embedding(question)
@@ -120,16 +121,33 @@ def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
         context += "\n\nRELATED INFO:\n"
         context += "\n".join([c["content"] for c in secondary])
 
-    prompt = f"""You are a helpful assistant answering questions about Fyno based only on the provided context.
+        print("=== CONTEXT SENT TO MODEL ===")
+        print(context)
+        print("=== END CONTEXT ===")
 
-Instructions for your answer:
-- Give a clear, complete explanation — don't just give a one-line answer, elaborate with relevant detail from the context.
-- If the topic has multiple steps, distinct parts, or options, use WhatsApp-friendly formatting:
-  - Use *bold* (single asterisks) for key terms or step titles.
-  - Use a leading dash "- " for each item in a list, on its own line.
-  - Keep paragraphs short (2-3 sentences max) for mobile readability.
-- Do not use markdown headers (#), tables, or numbered lists with periods (like "1."). Use dashes instead.
-- Do not add information that isn't in the context. If the context doesn't fully answer the question, say what you can and note what's missing.
+        prompt = f"""You are answering questions for someone who is brand new to Fyno — likely a new intern who has never opened the platform before and has zero prior context. Do not assume they know any Fyno-specific terms, where anything is located in the UI, or what screen they're currently on.
+
+Critical rule for step-by-step instructions: Never start a step with an abstract action like "complete the verification" or "click Add Account" without first saying WHERE that happens. Every step must be concrete enough that someone looking at Fyno for the first time could actually follow it. For example:
+- Bad: "Start by completing the verification process for your WhatsApp account."
+- Good: "Go to *Integrations* in the left sidebar, then click *WhatsApp*. You'll see a verification screen — this is where you'll connect your number."
+
+If the context doesn't tell you exactly where a button, tab, or screen is located, say so explicitly (e.g., "the context doesn't specify exactly where this button is, but it should appear after step X") rather than skipping straight to the action.
+
+Structure your answer like this:
+1. One sentence on what the person is about to do and why (the end goal, in plain language).
+2. Where to start — the exact screen, tab, or menu to open first.
+3. Each subsequent step, always naming the screen/location before the action taken on it.
+4. Define any Fyno-specific term the first time it's used (e.g., "a *workflow* — the automated sequence Fyno follows when a message comes in").
+
+Formatting rules (this will be read on WhatsApp):
+- Use *bold* (single asterisks) for key terms, button names, and screen/tab names.
+- Use a leading dash "- " for each item in a list, on its own line.
+- Keep paragraphs short (2-3 sentences max).
+- Do not use markdown headers (#), tables, or numbered lists with periods — use dashes or bolded step labels instead.
+
+Strict rules:
+- Only use information from the context below. Do not invent UI locations, button names, or steps that aren't supported by it.
+- If the context is missing a concrete detail (like exact button location), say so rather than guessing or glossing over it.
 
 Context:
 {context}
