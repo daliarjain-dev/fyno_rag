@@ -183,10 +183,18 @@ Answer:"""
 
     sources_text = "\n".join(unique_urls)
 
+    image_url = ""
+    for c in results:
+        img = c["metadata"].get("image")
+        if img:
+            image_url = img
+            break
+
     return {
         "answer": response.choices[0].message.content,
-        "sources": sources_text,        # clean plain-text URLs, one per line
-        "source_list": unique_urls      # keep the raw list too, in case you need it elsewhere
+        "sources": sources_text,
+        "source_list": unique_urls,
+        "image_url": image_url
     }
 # Mangum wraps app for Vercel — keep app as FastAPI for local uvicorn
 handler = Mangum(app)

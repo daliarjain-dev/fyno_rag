@@ -1,7 +1,9 @@
 import os
+import re
+from app.rag.image_resolver import get_live_image_map
 from pathlib import Path
 import frontmatter
-
+IMAGE_PATTERN = re.compile(r"!\[.*?\]\((/images/[^\)]+)\)")
 
 def get_project_root():
     current = Path(__file__).resolve()
@@ -48,11 +50,17 @@ def load_fyno_docs_local():
 
                     slug = post.get("slug")
                     url = build_url(slug, path)
-                    content = post.content  # frontmatter stripped, just the actual doc text
+                    content = post.content
+
+                    image_map = {}
+                    if IMAGE_PATTERN.search(content):
+                        print(f"Fetching live images for: {url}")
+                        image_map = get_live_image_map(url)
 
                     docs.append({
                         "url": url,
-                        "markdown": content
+                        "markdown": content,
+                        "image_map": image_map
                     })
 
     return docs
