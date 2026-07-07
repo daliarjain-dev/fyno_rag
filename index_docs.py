@@ -8,7 +8,7 @@ from app.rag.embeddings import get_embedding
 from app.rag.vectorstore import add_embedding, save_store, store_size
 from app.rag.vectorstore import index
  
-IMAGE_PATTERN = re.compile(r"!\[.*?\]\(/images/([^\)]+)\)")
+IMAGE_PATTERN = re.compile(r"!\s*\[.*?\]\(/images/([^\)]+)\)")
  
  
 def index_documents():

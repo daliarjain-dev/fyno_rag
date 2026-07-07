@@ -3,8 +3,7 @@ import re
 from app.rag.image_resolver import get_live_image_map
 from pathlib import Path
 import frontmatter
-IMAGE_PATTERN = re.compile(r"!\[.*?\]\((/images/[^\)]+)\)")
-
+IMAGE_PATTERN = re.compile(r"!\s*\[.*?\]\((/images/[^\)]+)\)")
 def get_project_root():
     current = Path(__file__).resolve()
 
