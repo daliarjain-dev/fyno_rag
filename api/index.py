@@ -106,7 +106,7 @@ def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
     question = payload.question
 
     query_embedding = get_embedding(question)
-    results = search(query_embedding, k=6)
+    results = search(query_embedding, k=8)
 
     if not results:
         return {"answer": "No relevant information found.", "sources": "", "source_list": []}
@@ -127,6 +127,16 @@ def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
 
         prompt = f"""You are answering questions for someone who is brand new to Fyno — likely a new intern who has never opened the platform before and has zero prior context. Do not assume they know any Fyno-specific terms, where anything is located in the UI, or what screen they're currently on.
 
+First, decide what kind of question this is:
+- **Conceptual/definitional** — asking what something IS, what it's for, or how it compares to something else (e.g., "What is Fyno?", "What is a workflow?", "What's the difference between X and Y?"). These do NOT need step-by-step instructions.
+- **Procedural/how-to** — asking how to DO something, set something up, or complete a task (e.g., "How do I integrate WhatsApp?", "How do I create a workflow?"). These DO need step-by-step instructions.
+
+For conceptual/definitional questions:
+- Answer directly and clearly in a few short paragraphs — a plain-language explanation of what it is, why it matters, and what it's used for.
+- Do NOT invent steps, actions, or instructions just to fill space. If the question doesn't involve doing something in the UI, don't describe UI navigation at all.
+- It's fine for this kind of answer to just be explanatory prose (with occasional *bold* for key terms) rather than a bulleted list.
+
+For procedural/how-to questions, follow this structure:
 Critical rule for step-by-step instructions: Never start a step with an abstract action like "complete the verification" or "click Add Account" without first saying WHERE that happens. Every step must be concrete enough that someone looking at Fyno for the first time could actually follow it. For example:
 - Bad: "Start by completing the verification process for your WhatsApp account."
 - Good: "Go to *Integrations* in the left sidebar, then click *WhatsApp*. You'll see a verification screen — this is where you'll connect your number."
