@@ -105,7 +105,7 @@ def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
     question = payload.question
  
     query_embedding = get_embedding(question)
-    results = search(query_embedding, k=6)
+    results = search(query_embedding, k=8)
  
     if not results:
         return {"answer": "No relevant information found.", "sources": "", "source_list": [], "image_url": ""}
@@ -164,7 +164,7 @@ Answer:"""
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=400
+        max_tokens=600
     )
  
     # Deduplicate source URLs while keeping order
