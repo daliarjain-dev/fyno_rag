@@ -1,5 +1,6 @@
 import sys
 import os
+import re
  
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app"))
@@ -105,7 +106,7 @@ def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
     question = payload.question
  
     query_embedding = get_embedding(question)
-    results = search(query_embedding, k=8)
+    results = search(query_embedding, k=6)
  
     if not results:
         return {"answer": "No relevant information found.", "sources": "", "source_list": [], "image_url": ""}
@@ -164,7 +165,7 @@ Answer:"""
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=600
+        max_tokens=400
     )
  
     # Deduplicate source URLs while keeping order
@@ -186,8 +187,13 @@ Answer:"""
             image_url = img
             break
  
+    # Prevent literal {{ }} in the answer (e.g. when explaining Handlebars/templating syntax)
+    # from being misinterpreted as Fyno's own template variables and breaking the send
+    safe_answer = re.sub(r"\{\{", "{ {", response.choices[0].message.content)
+    safe_answer = re.sub(r"\}\}", "} }", safe_answer)
+ 
     return {
-        "answer": response.choices[0].message.content,
+        "answer": safe_answer,
         "sources": sources_text,        # clean plain-text URLs, one per line
         "source_list": unique_urls,     # keep the raw list too, in case you need it elsewhere
         "image_url": image_url
@@ -195,3 +201,21 @@ Answer:"""
 # Mangum wraps app for Vercel — keep app as FastAPI for local uvicorn
 handler = Mangum(app)
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
