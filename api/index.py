@@ -114,12 +114,13 @@ def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
     primary = results[:3]
     secondary = results[3:]
  
-    context = "MOST RELEVANT:\n"
+    context = "CONTEXT SECTION A:\n"
     context += "\n".join([c["content"] for c in primary])
  
     if secondary:
-        context += "\n\nRELATED INFO:\n"
+        context += "\n\nCONTEXT SECTION B:\n"
         context += "\n".join([c["content"] for c in secondary])
+ 
     print("=== CONTEXT SENT TO MODEL ===")
     print(context)
     print("=== END CONTEXT ===")
@@ -144,6 +145,8 @@ This rule applies to the start of EVERY distinct phase or section within your an
  
 If the context does not explicitly state where a specific section, page, or menu item is located (e.g., which part of the sidebar, which top-level menu), you MUST say so directly in that step — for example: "(the docs don't specify exactly where this section lives, but it's likely under the left sidebar navigation)". Do not simply state the action as if the location were known when it isn't in the context. This applies even for single missing details, not just entire missing steps — never quietly skip past a gap.
  
+Important: the context below is split into two sections purely because of how it was retrieved — this is NOT a ranking of importance. A location detail, definition, or fact in "CONTEXT SECTION B" is just as valid and usable as anything in "CONTEXT SECTION A." Actively check BOTH sections for any navigation detail (like "left nav", "sidebar", a page name) relevant to the steps you're about to write, before assuming that detail is missing.
+ 
 Structure your answer like this:
 1. One sentence on what the person is about to do and why (the end goal, in plain language).
 2. Where to start — the exact screen, tab, or menu to open first.
@@ -166,8 +169,10 @@ Context:
  
 Question: {question}
  
+Before you write your final answer, do a quick self-check: for every step where you start a new phase or section, have you named a concrete location (screen/tab/menu) pulled from EITHER context section? If a location genuinely isn't stated anywhere in the context, have you explicitly flagged that gap in the text rather than skipping past it? Only after this check, write the answer.
+ 
 Answer:"""
-
+ 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
@@ -207,6 +212,10 @@ Answer:"""
 # Mangum wraps app for Vercel — keep app as FastAPI for local uvicorn
 handler = Mangum(app)
  
+
+
+
+
 
 
 
