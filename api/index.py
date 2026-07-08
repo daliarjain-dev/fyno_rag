@@ -120,6 +120,9 @@ def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
     if secondary:
         context += "\n\nRELATED INFO:\n"
         context += "\n".join([c["content"] for c in secondary])
+    print("=== CONTEXT SENT TO MODEL ===")
+    print(context)
+    print("=== END CONTEXT ===")
  
     prompt = f"""You are answering questions for someone who is brand new to Fyno — likely a new intern who has never opened the platform before and has zero prior context. Do not assume they know any Fyno-specific terms, where anything is located in the UI, or what screen they're currently on.
 
@@ -167,7 +170,7 @@ Answer:"""
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=400
+        max_tokens=500
     )
  
     # Deduplicate source URLs while keeping order
