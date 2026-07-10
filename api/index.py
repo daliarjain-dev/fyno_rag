@@ -15,6 +15,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from openai import OpenAI
 from mangum import Mangum
+from fastapi_mcp import FastApiMCP
  
 from rag.embeddings import get_embedding
 from rag.vectorstore import search, load_store
@@ -101,7 +102,7 @@ async def verify_fyno(request: Request):
 # -------------------------
 # Ask endpoint (protected)
 # -------------------------
-@app.post("/ask")
+@app.post("/ask", operation_id="ask_fyno_question")
 def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
     question = payload.question
  
@@ -209,28 +210,19 @@ Answer:"""
         "source_list": unique_urls,     # keep the raw list too, in case you need it elsewhere
         "image_url": image_url
     }
+ 
+# -------------------------
+# MCP server setup
+# -------------------------
+# Exposes /ask (and other routes) as MCP tools so any MCP-compatible
+# AI client (Claude Desktop, Cursor, etc.) can call this bot directly.
+# base_url is set explicitly since Vercel's internal/external URLs can differ.
+mcp = FastApiMCP(
+    app,
+    base_url="https://fyno-rag.vercel.app"
+)
+mcp.mount_http()
+ 
 # Mangum wraps app for Vercel — keep app as FastAPI for local uvicorn
 handler = Mangum(app)
  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
