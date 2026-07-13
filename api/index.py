@@ -212,10 +212,7 @@ Answer:"""
         "image_url": image_url
     }
 
-mcp=FastApiMCP(
-    app,
-    base_url="https://fyno-rag.vercel.app"
-)
+mcp=FastApiMCP(app)
 mcp.mount_http()
 # Mangum wraps app for Vercel — keep app as FastAPI for local uvicorn
 handler = Mangum(app)
