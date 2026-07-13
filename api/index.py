@@ -18,6 +18,8 @@ from mangum import Mangum
  
 from rag.embeddings import get_embedding
 from rag.vectorstore import search, load_store
+
+from fastapi_mcp import FastApiMCP
  
 # -------------------------
 # API Key Auth
@@ -101,7 +103,7 @@ async def verify_fyno(request: Request):
 # -------------------------
 # Ask endpoint (protected)
 # -------------------------
-@app.post("/ask")
+@app.post("/ask", operation_id="ask_fyno_question")
 def ask_question(payload: Question, api_key: str = Security(verify_api_key)):
     question = payload.question
  
@@ -209,6 +211,12 @@ Answer:"""
         "source_list": unique_urls,     # keep the raw list too, in case you need it elsewhere
         "image_url": image_url
     }
+
+mcp=FastApiMCP(
+    app,
+    base_url="https://fyno-rag.vercel.app"
+)
+mcp.mount_http()
 # Mangum wraps app for Vercel — keep app as FastAPI for local uvicorn
 handler = Mangum(app)
  

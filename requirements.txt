@@ -8,3 +8,4 @@ python-dotenv
 nltk
 numpy
 beautifulsoup4
+fastapi-mcp
